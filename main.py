@@ -1,5 +1,3 @@
-
-
 import sys
 import requests
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QStackedWidget, QHBoxLayout, QLineEdit, QApplication, QScrollArea, QFrame
@@ -42,42 +40,113 @@ from PySide6.QtCore import Qt
 
 class OnboardingScreen(QWidget):
     def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Welcome to CityExplorer")
-        self.resize(360, 640)
-        self.setMinimumSize(320, 480)
+     super().__init__()
+     self.setWindowTitle("Welcome to CityExplorer")
+     self.resize(360, 640)
+     self.setMinimumSize(320, 480)
 
+     self.setAutoFillBackground(True)
 
-        self.setAutoFillBackground(True)
+     self.layout = QVBoxLayout(self)
+     self.layout.setContentsMargins(0, 0, 0, 0)
+     self.layout.setAlignment(Qt.AlignCenter)
 
-        self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(20, 40, 20, 40)
-        self.layout.setAlignment(Qt.AlignCenter)
+    # Stacked widget to hold pages
+     self.stacked_widget = QStackedWidget()
+     self.layout.addWidget(self.stacked_widget)
 
-        self.stacked_widget = QStackedWidget()
-        self.layout.addWidget(self.stacked_widget)
+    # Create pages
+     self.page1 = self.create_page("slide1.png", "🌍 Discover New Places", "Uncover hidden gems & must-see locations")
+     self.page2 = self.create_page("slide.png", "🎭 Find Exciting Events", "Stay updated with concerts, festivals & activities")
+     self.page3 = self.create_page("slide2.png", "🗺️ Plan Your Journey", "Your city, your adventure – plan your perfect trip")
 
-        # Pages
-        self.page1 = self.create_page("slide1.png", "🌍 Discover New Places", "Uncover hidden gems & must-see locations")
-        self.page2 = self.create_page("slide.png", "🎭 Find Exciting Events", "Stay updated with concerts, festivals & activities")
-        self.page3 = self.create_page("slide2.png", "🗺️ Plan Your Journey", "Your city, your adventure – plan your perfect trip")
+     self.pages = [self.page1, self.page2, self.page3]  # Save pages in a list
 
-        self.stacked_widget.addWidget(self.page1)
-        self.stacked_widget.addWidget(self.page2)
-        self.stacked_widget.addWidget(self.page3)
+    # Add pages to the stacked widget
+     for page in self.pages:
+        self.stacked_widget.addWidget(page)
 
-        self.pagination_layout = QHBoxLayout()
-        self.dots = [QLabel("•") for _ in range(3)]
-        for dot in self.dots:
-            dot.setFont(QFont("Arial", 20))
-            dot.setAlignment(Qt.AlignCenter)
-            dot.setStyleSheet("color: #A0A0A0;")
-            self.pagination_layout.addWidget(dot)
-        self.layout.addLayout(self.pagination_layout)
+     self.current_index = 0
+     self.update_pagination()
 
-        self.next_button = QPushButton("Get Started")
-        self.next_button.setStyleSheet("""
-    QPushButton {
+    # Fade Animation Setup
+     self.opacity_effect = QGraphicsOpacityEffect()
+     self.stacked_widget.setGraphicsEffect(self.opacity_effect)
+     self.animation = QPropertyAnimation(self.opacity_effect, b"opacity")
+     self.animation.setDuration(500)
+
+    # Timer for auto-switching pages
+     self.timer = QTimer(self)
+     self.timer.timeout.connect(self.next_page)
+     self.timer.start(2000)
+
+    def create_page(self, image_path, title_text, description_text):
+     page = QWidget()
+     page.setObjectName("page")
+
+    # Background label
+     background = QLabel(page)
+     background.setPixmap(QPixmap(image_path))
+     background.setScaledContents(True)
+
+     background.setGeometry(0, 0, page.width(), page.height())  
+     background.setGeometry(0, 0, self.width(), self.height())
+     background.lower()  # Send background behind
+
+    # Create a transparent container
+     container = QWidget(page)
+     container.setStyleSheet("background: transparent;")
+     container_layout = QVBoxLayout(container)
+     container_layout.setContentsMargins(30, 80, 30, 40)
+     container_layout.setAlignment(Qt.AlignTop)
+# Title
+     title = QLabel(title_text)
+     title.setFont(QFont("Segoe UI", 12, QFont.Bold))
+     title.setAlignment(Qt.AlignCenter)
+     title.setStyleSheet("""
+     QLabel {
+        color: #ffffff;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 12px 20px;
+        border-radius: 20px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+     }
+     """)
+
+# Description
+     description = QLabel(description_text)
+     description.setFont(QFont("Segoe UI", 10))
+     description.setWordWrap(True)
+     description.setAlignment(Qt.AlignCenter)
+     description.setStyleSheet("""
+     QLabel {
+        color: #f0f0f0;
+        background: rgba(0, 0, 0, 0.25);
+        padding: 10px 16px;
+        border-radius: 16px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+     }
+     """)
+
+    # Pagination Dots
+     pagination_layout = QHBoxLayout()
+     pagination_layout.setAlignment(Qt.AlignCenter)
+     dots = []
+     for _ in range(3):
+        dot = QLabel("•")
+        dot.setFont(QFont("Arial", 20))
+        dot.setStyleSheet("color: #A0A0A0;")
+        dot.setAlignment(Qt.AlignCenter)
+        pagination_layout.addWidget(dot)
+        dots.append(dot)
+
+    # Next Button
+     next_button = QPushButton("Get Started")
+     next_button.setStyleSheet(""" 
+     QPushButton {
         background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #6a11cb, stop:1 #2575fc);
         border: none;
         border-radius: 28px;
@@ -88,83 +157,54 @@ class OnboardingScreen(QWidget):
         padding: 14px 30px;
         margin-top: 20px;
         box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
-    }
-    QPushButton:hover {
+     }
+     QPushButton:hover {
         background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #8e2de2, stop:1 #4a00e0);
         transform: scale(1.05);
-    }
-    QPushButton:pressed {
+     }
+     QPushButton:pressed {
         background-color: #5e35b1;
         transform: scale(0.98);
-    }
-""")
-
-        self.next_button.clicked.connect(self.next_page)
-        self.next_button.hide()
-        self.layout.addWidget(self.next_button, alignment=Qt.AlignCenter)
-
-        self.current_index = 0
-        self.update_pagination()
-
-        # Opacity Effect for animation
-        self.opacity_effect = QGraphicsOpacityEffect()
-        self.stacked_widget.setGraphicsEffect(self.opacity_effect)
-        self.animation = QPropertyAnimation(self.opacity_effect, b"opacity")
-        self.animation.setDuration(500)
-
-        # Timer
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.next_page)
-        self.timer.start(2000)
-
-    def create_page(self, image_path, title_text, description_text):
-     page = QWidget()
-     page.setObjectName("page")  # To use in stylesheet
-     layout = QVBoxLayout()
-     layout.setContentsMargins(30, 80, 30, 40)
-     layout.setAlignment(Qt.AlignTop)
-      
-     background = QLabel(page)
-     background.setPixmap(QPixmap(image_path))
-     background.setScaledContents(True)
-     background.setGeometry(0, 0, 360, 640)  # Initial full size
-     background.setObjectName("background_label")
+     }
+     """)
+     next_button.clicked.connect(self.next_page)
+     next_button.hide()  # Hide initially
 
 
-     title = QLabel(title_text)
-     title.setFont(QFont("Arial", 22, QFont.Bold))
-     title.setAlignment(Qt.AlignCenter)
-     title.setStyleSheet("color: white; background-color: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 10px;")
+     container_layout.addWidget(title)
+     container_layout.addSpacing(10)
+     container_layout.addWidget(description)
+     container_layout.addStretch()
+     container_layout.addLayout(pagination_layout)
+     container_layout.addWidget(next_button, alignment=Qt.AlignCenter)
 
-     description = QLabel(description_text)
-     description.setFont(QFont("Arial", 14))
-     description.setWordWrap(True)
-     description.setAlignment(Qt.AlignCenter)
-     description.setStyleSheet("color: white; background-color: rgba(0, 0, 0, 0.3); padding: 8px; border-radius: 8px;")
+    # Save references
+     page.background = background
+     page.dots = dots
+     page.next_button = next_button
+     page.container = container
 
-     layout.addWidget(title)
-     layout.addSpacing(10)
-     layout.addWidget(description)
-
-     page.setLayout(layout)
      return page
+
 
     def next_page(self):
      if self.animation.state() == QPropertyAnimation.Running:
         return
 
-     if self.current_index < self.stacked_widget.count() - 1:
+     if self.current_index < len(self.pages) - 1:
         self.current_index += 1
         self.fade_to_page(self.current_index)
 
-        if self.current_index == self.stacked_widget.count() - 1:
-            self.next_button.show()
+        if self.current_index == len(self.pages) - 1:
+            page = self.pages[self.current_index]
+            page.next_button.show()
             self.timer.stop()
         else:
-            self.next_button.hide()
+            page = self.pages[self.current_index]
+            page.next_button.hide()
      else:
         self.close()
-        self.show_authentication_screen()  # 🔄 Replace with your auth screen
+        self.show_authentication_screen()
 
     def fade_to_page(self, index):
         self.animation.stop()
@@ -182,10 +222,13 @@ class OnboardingScreen(QWidget):
         self.animation.start()
 
     def update_pagination(self):
-        for i, dot in enumerate(self.dots):
+     page = self.pages[self.current_index]
+     for i, dot in enumerate(page.dots):
+        if i == self.current_index:
+            dot.setStyleSheet("color: #FF4081;")
+        else:
             dot.setStyleSheet("color: #A0A0A0;")
-        self.dots[self.current_index].setStyleSheet("color: #FF4081;")
-
+  
     def show_authentication_screen(self):
       """Show the authentication screen after onboarding is complete."""
       self.auth_screen = AuthScreen()
@@ -1036,6 +1079,40 @@ class WeatherDashboard(QWidget):
             print(f"Error loading icon: {e}")
             return QPixmap() 
 
+import requests
+from PySide6.QtWidgets import QMessageBox
+
+# Get access token
+def get_access_token(client_id, client_secret):
+    url = "https://test.api.amadeus.com/v1/security/oauth2/token"
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    data = {
+        "grant_type": "client_credentials",
+        "client_id": client_id,
+        "client_secret": client_secret
+    }
+    response = requests.post(url, headers=headers, data=data)
+    return response.json().get("access_token")
+
+# Search hotels
+def search_hotels(city_code, access_token):
+    url = "https://test.api.amadeus.com/v1/shopping/hotel-offers"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    params = {
+        "cityCode": city_code,
+        "adults": 1,
+        "roomQuantity": 1,
+        "radius": 50,
+        "radiusUnit": "KM",
+        "paymentPolicy": "NONE",
+        "includeClosed": False,
+        "bestRateOnly": True,
+        "view": "FULL",
+        "sort": "PRICE"
+    }
+    response = requests.get(url, headers=headers, params=params)
+    return response.json()
+
 class ExplorePage(QWidget):
     def __init__(self):
         super().__init__()
@@ -1316,54 +1393,63 @@ class ExplorePage(QWidget):
             QMessageBox.warning(self, "API Error", "Failed to fetch restaurant details.")
             return []
 
+# Inside your class
     def perform_hotel_search(self):
-        # Initialize Amadeus API client
-        amadeus = Client(client_id='X2cCUdPzmWTGRmjqHE76Mj8pwJ9MtF8o', client_secret='gPVsq9G9C2RmwpTG')
-        
-        city = self.city_input.text().strip()
-        if not city:
-            QMessageBox.warning(self, "Input Error", "Please enter a city name.")
-            return
+      client_id = 'X2cCUdPzmWTGRmjqHE76Mj8pwJ9MtF8o'
+      client_secret = 'gPVsq9G9C2RmwpTG'
 
-        city_code = self.get_city_code(amadeus, city)
-        if not city_code:
-            QMessageBox.warning(self, "City Not Found", "Could not find city code.")
-            return
+      city = self.city_input.text().strip()
+      if not city:
+        QMessageBox.warning(self, "Input Error", "Please enter a city name.")
+        return
 
-        hotels = self.search_hotels_by_city_code(amadeus, city_code)
-        self.hotel_list.clear()
-        if not hotels:
-            self.hotel_list.addItem("No hotels found.")
-            return
+      access_token = get_access_token(client_id, client_secret)
+      if not access_token:
+        QMessageBox.warning(self, "Authentication Error", "Failed to get access token.")
+        return
 
-        for hotel in hotels:
-            name = hotel["hotel"]["name"]
-            address = hotel["hotel"]["address"].get("lines", [""])[0]
-            self.hotel_list.addItem(f"{name}\n{address}")
+      city_code = self.get_city_code(city, access_token)
+      if not city_code:
+        QMessageBox.warning(self, "City Not Found", "Could not find city code.")
+        return
 
-    def get_city_code(self, amadeus, city_name):
-     try:
-        response = amadeus.reference_data.locations.get(
-            keyword=city_name,
-            subType="CITY"
-        )
-        if response.data:
-            return response.data[0]['id']  
-        return None
-     except ResponseError as e:
+      hotels_data = search_hotels(city_code, access_token)
+      self.hotel_list.clear()
+
+      hotels = hotels_data.get("data", [])
+      if not hotels:
+        self.hotel_list.addItem("No hotels found.")
+        return
+
+      for hotel in hotels:
+        name = hotel["hotel"]["name"]
+        address = hotel["hotel"]["address"].get("lines", [""])[0]
+        self.hotel_list.addItem(f"{name}\n{address}")
+
+    def get_city_code(self, city_name, access_token):
+      try:
+        url = "https://test.api.amadeus.com/v1/reference-data/locations"
+        headers = {
+            "Authorization": f"Bearer {access_token}"
+        }
+        params = {
+            "keyword": city_name,
+            "subType": "CITY"
+        }
+        response = requests.get(url, headers=headers, params=params)
+        if response.status_code == 200:
+            data = response.json().get('data', [])
+            if data:
+                city_code = data[0]['id']
+                print(f"Found city code: {city_code}")
+                return city_code
+        else:
+            print(f"City code fetch error: {response.text}")
+            return None
+      except Exception as e:
         print(f"Error fetching city code: {e}")
         return None
 
-
-    def search_hotels_by_city_code(self, amadeus, city_code):
-        try:
-            response = amadeus.hotel.offers.get(cityCode=city_code)
-            if response.data:
-                return response.data
-            return []
-        except ResponseError as e:
-            print(f"Error fetching hotels: {e}")
-            return []
 
 class AIAssistant(QWidget):
     def __init__(self):
@@ -1509,33 +1595,66 @@ class ShowMapPage(QWidget):
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignCenter)
 
-        # Title
-        self.title_label = QLabel("🌍 Interactive Map")
-        self.title_label.setAlignment(Qt.AlignCenter)
-        self.title_label.setFont(QFont("Poppins", 26, QFont.Bold))
-        self.title_label.setStyleSheet("color: #FF69B4; text-shadow: 2px 2px 10px #FFC0CB;")
-        self.layout.addWidget(self.title_label)
-
+    
         # Create map (using Folium)
         self.create_map()
 
         # Set up WebEngineView to display the map
-        self.map_view = QWebEngineView()
-        self.layout.addWidget(self.map_view)
-        self.map_view.setHtml(self.map._repr_html_())  # Display the map in HTML format
+        self.map_view = QWebEngineView()  
+        with open("map_template.html", "r", encoding="utf-8") as f:
+            html = f.read()
+        self.map_view.setHtml(html)
+        self.layout.addWidget(self.map_view, stretch=1)
+        # Move Button
+        self.move_button = QPushButton("Map")
+        self.move_button.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #ff416c, stop:1 #ff4b2b);
+                border: none;
+                color: white;
+                padding: 10px 20px;
+                font-size: 16px;
+                font-weight: bold;
+                border-radius: 25px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #ff4b2b, stop:1 #ff416c);
+            }
+        """)
+        self.move_button.clicked.connect(self.move_to_new_location)
+        self.layout.addWidget(self.move_button)
 
         self.setLayout(self.layout)
 
+    def move_to_new_location(self):
+        # Move to New York (dynamic move)
+        lat, lon = 40.7128, -74.0060
+        self.map_view.page().runJavaScript(f"moveTo({lat}, {lon});")
+
     def create_map(self):
-        """Create a map centered on a specific city (e.g., default to Paris)"""
-        self.map = folium.Map(location=[48.8566, 2.3522], zoom_start=12)
+     """Create a beautiful map styled like Google Maps"""
+     self.map = folium.Map(
+        location=[48.8566, 2.3522],
+        zoom_start=13,
+        tiles='CartoDB positron'  # Google Maps light style
+     )
 
-        # Add a marker (example)
-        folium.Marker([48.8566, 2.3522], popup="Paris").add_to(self.map)
+     folium.Marker(
+        [48.8566, 2.3522],
+        popup="Paris",
+        icon=folium.Icon(color="pink", icon="info-sign")
+     ).add_to(self.map)
+     folium.TileLayer(
+       tiles='https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+       attr='OpenStreetMap HOT',
+       name='Hot Style'
+     ).add_to(self.map)
 
-        # Add some other features like a tile layer or controls if needed
-        plugins.Fullscreen().add_to(self.map)
-        plugins.MousePosition().add_to(self.map)
+    # Optional: Add nice plugins
+     plugins.Fullscreen(position='topright').add_to(self.map)
+     plugins.MousePosition().add_to(self.map)
+     plugins.LocateControl().add_to(self.map)
+
 
     def update_map_location(self, lat, lon):
         """Update the map to center on a new location"""
