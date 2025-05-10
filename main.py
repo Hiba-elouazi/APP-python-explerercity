@@ -553,7 +553,7 @@ class MainWindow(QMainWindow):
         self.ui.search_button.clicked.connect(self.update_dashboard)
 
         # Initialize the Explore Page
-        self.explore_page = ExplorePage()
+        self.explore_page = ItineraryPlanner()
         
         global widgets
         widgets = self.ui
@@ -846,7 +846,7 @@ class MainWindow(QMainWindow):
 
         if btnName == "btn_explore":
          if not hasattr(self, 'explore_page'):
-            self.explore_page = ExplorePage()
+            self.explore_page = ItineraryPlanner()
            
          widgets.stackedWidget.addWidget(self.explore_page)  
          widgets.stackedWidget.setCurrentWidget(self.explore_page)  
@@ -1113,343 +1113,226 @@ def search_hotels(city_code, access_token):
     response = requests.get(url, headers=headers, params=params)
     return response.json()
 
-class ExplorePage(QWidget):
+
+from PySide6.QtWidgets import (
+    QWidget, QLabel, QComboBox, QSpinBox, QPushButton,
+    QVBoxLayout, QHBoxLayout, QScrollArea, QFrame
+)
+from PySide6.QtWidgets import QLineEdit
+
+
+class ItineraryPlanner(QWidget):
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("Itinerary Planner")
+        self.setStyleSheet("background-color: white;")
+        self.layout = QVBoxLayout(self)
 
-        self.main_layout = QVBoxLayout(self)
-        self.main_layout.setAlignment(Qt.AlignCenter)
+        # Title
+        title = QLabel("🗓️ Plan Your Perfect Day")
+        title.setStyleSheet("font-size: 20px; font-weight: bold;")
+        self.layout.addWidget(title)
 
-        # --- STACKED LAYOUT TO SWITCH VIEWS ---
-        self.stacked_layout = QStackedLayout()
-        self.main_layout.addLayout(self.stacked_layout)
+        # Interests
+        interest_layout = QHBoxLayout()
+        interest_label = QLabel("Select Interest:")
+        self.interest_box = QComboBox()
+        self.interest_box.addItems(["Culture", "Nature", "Food", "Nightlife"])
+        interest_layout.addWidget(interest_label)
+        interest_layout.addWidget(self.interest_box)
+        self.layout.addLayout(interest_layout)
 
-        # --- PAGE 1: Explore Buttons ---
-        self.button_page = QWidget()
-        button_layout = QVBoxLayout(self.button_page)
-        button_layout.setAlignment(Qt.AlignCenter)
+        # Time Available
+        time_layout = QHBoxLayout()
+        time_label = QLabel("Hours Available:")
+        self.time_input = QSpinBox()
+        self.time_input.setRange(1, 24)
+        time_layout.addWidget(time_label)
+        time_layout.addWidget(self.time_input)
+        self.layout.addLayout(time_layout)
 
-        self.hotels_button = QPushButton("Hotels")
-        self.hotels_button.setFixedSize(700, 200)
-        self.hotels_button.setStyleSheet("""
-            QPushButton {
-                font-size: 24px;
-                font-weight: bold;
-                color: white;
-                border: none;
-                padding: 20px;
-                border-radius: 20px;
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                                            stop:0 #84fab0, stop:1 #8fd3f4);
-                box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                                            stop:0 #a6c1ee, stop:1 #fbc2eb);
-                transform: scale(1.05);
-            }
-            QPushButton:pressed {
-                background-color: #6ec6ca;
-            }
-        """)
+        # Button
+        self.generate_button = QPushButton("Generate Itinerary")
+        self.generate_button.clicked.connect(self.generate_itinerary)
+        self.layout.addWidget(self.generate_button)
 
-        self.restaurants_button = QPushButton("Restaurants")
-        self.restaurants_button.setFixedSize(700, 200)
-        self.restaurants_button.setStyleSheet("""
-            QPushButton {
-                font-size: 24px;
-                font-weight: bold;
-                color: white;
-                border: none;
-                padding: 20px;
-                border-radius: 20px;
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                                            stop:0 #84fab0, stop:1 #8fd3f4);
-                box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                                            stop:0 #a6c1ee, stop:1 #fbc2eb);
-                transform: scale(1.05);
-            }
-            QPushButton:pressed {
-                background-color: #6ec6ca;
-            }
-        """)
+        # Results area
+        self.results_area = QScrollArea()
+        self.results_widget = QVBoxLayout()
+        container = QFrame()
+        container.setLayout(self.results_widget)
+        self.results_area.setWidget(container)
+        self.results_area.setWidgetResizable(True)
+        self.layout.addWidget(self.results_area)
 
-        button_layout.addWidget(self.hotels_button)
-        button_layout.addWidget(self.restaurants_button)
-        self.stacked_layout.addWidget(self.button_page)
+        self.setStyleSheet("""
+    QWidget {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        font-size: 16px;
+        color:#FF69B4;
+        background-color: #f5f8fb;
+    }
 
-        # --- PAGE 2: Hotel Search ---
-        self.hotel_search_page = QWidget()
-        hotel_layout = QVBoxLayout(self.hotel_search_page)
-        hotel_layout.setAlignment(Qt.AlignTop)
+    QLabel {
+        font-weight: 500;
+    }
 
+    QLineEdit, QComboBox, QSpinBox {
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 6px 10px;
+        min-height: 30px;
+        color: black;
+    }
+
+    QPushButton {
+        background-color: qlineargradient(
+            spread:pad, x1:0, y1:0, x2:1, y2:0, 
+            stop:0 #42a5f5, stop:1 #1e88e5
+        );
+        color: white;
+        font-weight: bold;
+        border: none;
+        border-radius: 12px;
+        padding: 2px 12px;
+        margin-top: 10px;
+        height: 30px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    QPushButton:hover {
+        background-color: qlineargradient(
+            spread:pad, x1:0, y1:0, x2:1, y2:0, 
+            stop:0 #2196f3, stop:1 #1565c0
+        );
+    }
+
+    QScrollArea {
+        border: none;
+        background-color: transparent;
+    }
+
+    QFrame {
+        background-color: transparent;
+    }
+""")
+        
+  
+            
+           
+        city_layout = QHBoxLayout()
+        city_label = QLabel("Enter City:")
         self.city_input = QLineEdit()
-        self.city_input.setPlaceholderText("Enter city name")
-        self.city_input.setStyleSheet("font-size: 18px; padding: 10px; border-radius: 10px;")
+        city_layout.addWidget(city_label)
+        city_layout.addWidget(self.city_input)
+        self.layout.addLayout(city_layout)
 
-        self.search_button = QPushButton("Search Hotels")
-        self.search_button.setStyleSheet("font-size: 18px; padding: 10px; border-radius: 10px; background-color: #3498db; color: white;")
 
-        self.hotel_list = QListWidget()
+    def fetch_places(self, lat, lon, interest, limit=5):
+      category_mapping = {
+        "Culture": "cultural",
+        "Nature": "natural",
+        "Food": "foods",
+        "Nightlife": "adult"
+      }
+      category = category_mapping.get(interest.lower().capitalize(), "interesting_places")
 
-        hotel_layout.addWidget(self.city_input)
-        hotel_layout.addWidget(self.search_button)
-        hotel_layout.addWidget(self.hotel_list)
-        self.stacked_layout.addWidget(self.hotel_search_page)
+      url = "https://opentripmap-places-v1.p.rapidapi.com/en/places/radius"
+      querystring = {
+        "radius": "3000",
+        "lon": lon,
+        "lat": lat,
+        "rate": "2",
+        "format": "json",
+        "limit": limit,
+        "kinds": category
+      }
 
-        # ADD RETURN BUTTON TO PAGE 2
-        self.return_button = QPushButton("Return")
-        self.return_button.setFixedSize(100, 40)
-        self.return_button.setStyleSheet("""
-            QPushButton {
-                font-size: 18px;
-                padding: 10px;
-                border-radius: 10px;
-                background-color:#FF69B4; 
-                color: white;
-            }
-            QPushButton:hover {
-                background-color: #5dade2;
-            }
-            QPushButton:pressed {
-                background-color: #a93226;
-            }
-        """)
-        hotel_layout.addWidget(self.return_button)
+      headers = {
+        "x-rapidapi-host": "opentripmap-places-v1.p.rapidapi.com",
+        "x-rapidapi-key": "7d48e9a794mshdb5dd001a209e67p1df721jsne88970b1dbc7"
+      }
 
-        # CONNECT BUTTON TO SWITCH TO HOTEL SEARCH VIEW
-        self.hotels_button.clicked.connect(self.show_hotel_search)
-        self.search_button.clicked.connect(self.perform_hotel_search)
-        self.return_button.clicked.connect(self.show_main_page)
- 
-        # --- PAGE 3: Restaurant Search ---
-        self.restaurant_search_page = QWidget()
-        restaurant_layout = QVBoxLayout(self.restaurant_search_page)
-        restaurant_layout.setAlignment(Qt.AlignTop)
+      response = requests.get(url, headers=headers, params=querystring)
 
-        self.restaurant_input = QLineEdit()
-        self.restaurant_input.setPlaceholderText("Enter city name for restaurants")
-        self.restaurant_input.setStyleSheet("font-size: 18px; padding: 10px; border-radius: 10px;")
+      if response.status_code == 200:
+        return response.json()
+      else:
+        print("Failed to fetch places:", response.status_code)
+        return []
 
-        self.restaurant_search_button = QPushButton("Search Restaurants")
-        self.restaurant_search_button.setStyleSheet("font-size: 18px; padding: 10px; border-radius: 10px; background-color: #3498db; color: white;")
+    def generate_itinerary(self):
+      interest = self.interest_box.currentText()
+      hours = self.time_input.value()
+      city = self.city_input.text()
 
-        self.restaurant_scroll_area = QScrollArea()
-        self.restaurant_scroll_area.setWidgetResizable(True)
-        self.restaurant_scroll_area.setStyleSheet("border-radius: 15px; border: 2px solid #FFB6C1;")
-
-        self.restaurant_layout = QVBoxLayout()
-        self.restaurant_container = QWidget()
-        self.restaurant_container.setLayout(self.restaurant_layout)
-
-        self.restaurant_scroll_area.setWidget(self.restaurant_container)
-
-        restaurant_layout.addWidget(self.restaurant_input)
-        restaurant_layout.addWidget(self.restaurant_search_button)
-        restaurant_layout.addWidget(self.restaurant_scroll_area)
-
-        self.stacked_layout.addWidget(self.restaurant_search_page)
-        # ADD RETURN BUTTON TO PAGE 3
-        self.return_button = QPushButton("Return")
-        self.return_button.setFixedSize(100, 40)
-        self.return_button.setStyleSheet("""
-            QPushButton {
-                font-size: 18px;
-                padding: 10px;
-                border-radius: 10px;
-                background-color:#FF69B4; 
-                color: white;
-            }
-            QPushButton:hover {
-                background-color: #5dade2;
-            }
-            QPushButton:pressed {
-                background-color: #a93226;
-            }
-        """)
-        restaurant_layout.addWidget(self.return_button)
-
-        # CONNECT BUTTONS TO SWITCH VIEWS
-        self.hotels_button.clicked.connect(self.show_hotel_search)
-        self.restaurants_button.clicked.connect(self.show_restaurant_search)
-
-        self.search_button.clicked.connect(self.perform_hotel_search)
-        self.restaurant_search_button.clicked.connect(self.perform_restaurant_search)
-        self.return_button.clicked.connect(self.show_main_page)
- 
-    def show_restaurant_search(self):
-        self.stacked_layout.setCurrentWidget(self.restaurant_search_page)
-    def show_hotel_search(self):
-        self.stacked_layout.setCurrentWidget(self.hotel_search_page)
-    def show_main_page(self):
-        self.stacked_layout.setCurrentWidget(self.button_page)
-
-    def perform_restaurant_search(self):
-        city_name = self.restaurant_input.text().strip()
-        if not city_name:
-            QMessageBox.warning(self, "Input Error", "Please enter a city name for restaurants.")
-            return
-
-        api_key = "fsq3e9BrUQUIeZxpagEB8lZxQrtdq80HrkDdFC3Llka+JQI="  
-        restaurants = self.search_restaurants(city_name, api_key)
-
-        self.clear_restaurant_layout()
-
-    
-        for restaurant in restaurants:
-                name = restaurant.get("name", "No Name")
-                location = restaurant.get("location", {})
-                address = location.get("formatted_address", "No address available")
-                rating = restaurant.get("rating", "N/A")
-                photos = restaurant.get("photos", [])
-
-                fsq_id = restaurant.get("fsq_id")
-                if fsq_id:
-                  details = self.get_place_details(fsq_id, api_key)
-                  rating = details.get("rating", rating)  
-                  photos = details.get("photos", photos) 
-                photo_url = "https://via.placeholder.com/150"
-                if photos:
-                    photo = photos[0]
-                    prefix = photo.get("prefix", "")
-                    suffix = photo.get("suffix", "")
-                    photo_url = f"{prefix}original{suffix}"
-
-                # Create a frame for each restaurant with image and info
-                frame = QFrame()
-                frame.setStyleSheet("""
-                    QFrame {
-                        border: 2px solid #FFB6C1;
-                        border-radius: 15px;
-                        padding: 10px;
-                        background-color: white;
-                        colour: black;
-                    }
-                """)
-
-                frame_layout = QHBoxLayout(frame)
-
-                # Image
-                try:
-                    img_data = requests.get(photo_url).content
-                    pixmap = QPixmap()
-                    pixmap.loadFromData(img_data)
-                    image_label = QLabel()
-                    image_label.setPixmap(pixmap.scaled(150, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-                except:
-                    image_label = QLabel("No Image")
-
-                frame_layout.addWidget(image_label)
-
-                # Text Info
-                info_layout = QVBoxLayout()
-                info_layout.addWidget(QLabel(f"<b>{name}</b>"))
-                info_layout.addWidget(QLabel(f"📍 Address: {address}"))
-                info_layout.addWidget(QLabel(f"⭐ Rating: {rating}"))
-
-                frame_layout.addLayout(info_layout)
-
-                self.restaurant_layout.addWidget(frame)
-
-    def get_place_details(self, fsq_id, api_key):
-        url = f"https://api.foursquare.com/v3/places/{fsq_id}"
-        headers = {
-            "Authorization": f"{api_key}",
-            "Accept": "application/json"
-        }
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
-            return response.json()
-        return {}
-    def clear_restaurant_layout(self):
-     while self.restaurant_layout.count():
-        item = self.restaurant_layout.takeAt(0)
-        widget = item.widget()
-        if widget is not None:
-            widget.deleteLater()
-
-    def search_restaurants(self, city_name, api_key):
-        search_url = f"https://api.foursquare.com/v3/places/search?query=restaurant&near={city_name}&limit=5"
-        headers = {
-            "Authorization": f"{api_key}",
-            "Accept": "application/json"
-        }
-
-        try:
-            response = requests.get(search_url, headers=headers)
-            response.raise_for_status()
-            results = response.json().get("results", [])
-            detailed_restaurants = []
-            for restaurant in results:
-                fsq_id = restaurant["fsq_id"]
-                
-                detailed_restaurants.append(restaurant)  
-            return detailed_restaurants
-        except requests.exceptions.RequestException as e:
-            print(f"Request failed: {e}")
-            QMessageBox.warning(self, "API Error", "Failed to fetch restaurant details.")
-            return []
-
-# Inside your class
-    def perform_hotel_search(self):
-      client_id = 'X2cCUdPzmWTGRmjqHE76Mj8pwJ9MtF8o'
-      client_secret = 'gPVsq9G9C2RmwpTG'
-
-      city = self.city_input.text().strip()
       if not city:
         QMessageBox.warning(self, "Input Error", "Please enter a city name.")
         return
 
-      access_token = get_access_token(client_id, client_secret)
-      if not access_token:
-        QMessageBox.warning(self, "Authentication Error", "Failed to get access token.")
+      lat, lon = get_coordinates_by_city(city)
+
+      if lat is None:
+        QMessageBox.critical(self, "Error", "Could not get location for the city.")
         return
 
-      city_code = self.get_city_code(city, access_token)
-      if not city_code:
-        QMessageBox.warning(self, "City Not Found", "Could not find city code.")
+      places = self.fetch_places(lat, lon, interest, limit=hours)
+
+      self.show_real_itinerary(places)
+    
+    def show_real_itinerary(self, places):
+    # Vider les résultats précédents
+      while self.results_widget.count():
+        child = self.results_widget.takeAt(0)
+        if child.widget():
+            child.widget().deleteLater()
+
+      if not places:
+        msg = QLabel("❌ No places found.")
+        self.results_widget.addWidget(msg)
         return
 
-      hotels_data = search_hotels(city_code, access_token)
-      self.hotel_list.clear()
+      for i, place in enumerate(places):
+        name = place.get("name", "Unnamed Place")
+        time = f"{9 + i}:00 AM"
+        label = QLabel(f"📍 {name} - {time}")
+        label.setStyleSheet("padding: 10px; background-color: #e6f2ff; border-radius: 10px;")
+        self.results_widget.addWidget(label)
 
-      hotels = hotels_data.get("data", [])
-      if not hotels:
-        self.hotel_list.addItem("No hotels found.")
-        return
+       
+    def show_sample_itinerary(self, interest, hours):
+        # Clear previous
+        while self.results_widget.count():
+            child = self.results_widget.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
 
-      for hotel in hotels:
-        name = hotel["hotel"]["name"]
-        address = hotel["hotel"]["address"].get("lines", [""])[0]
-        self.hotel_list.addItem(f"{name}\n{address}")
+        # Demo placeholder items
+        for i in range(hours):
+            item = QLabel(f"🔹 {interest} Place {i+1} - {9 + i}:00 AM")
+            item.setStyleSheet("padding: 10px; background-color: #f0f0f0; border-radius: 10px;")
+            self.results_widget.addWidget(item)
 
-    def get_city_code(self, city_name, access_token):
-      try:
-        url = "https://test.api.amadeus.com/v1/reference-data/locations"
-        headers = {
-            "Authorization": f"Bearer {access_token}"
-        }
-        params = {
-            "keyword": city_name,
-            "subType": "CITY"
-        }
-        response = requests.get(url, headers=headers, params=params)
-        if response.status_code == 200:
-            data = response.json().get('data', [])
-            if data:
-                city_code = data[0]['id']
-                print(f"Found city code: {city_code}")
-                return city_code
-        else:
-            print(f"City code fetch error: {response.text}")
-            return None
-      except Exception as e:
-        print(f"Error fetching city code: {e}")
-        return None
+import requests
 
+def get_coordinates_by_city(city_name):
+    url = "https://opentripmap-places-v1.p.rapidapi.com/en/places/geoname"
+    querystring = {"name": city_name}
+
+    headers = {
+        "x-rapidapi-host": "opentripmap-places-v1.p.rapidapi.com",
+        "x-rapidapi-key": "7d48e9a794mshdb5dd001a209e67p1df721jsne88970b1dbc7"
+    }
+
+    response = requests.get(url, headers=headers, params=querystring)
+
+    if response.status_code == 200:
+        data = response.json()
+        return data["lat"], data["lon"]
+    else:
+        print("Failed to get coordinates:", response.status_code)
+        return None, None
 
 class AIAssistant(QWidget):
     def __init__(self):
