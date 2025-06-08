@@ -15,11 +15,21 @@ widgets = None
 from pymongo import MongoClient
 
 # MongoDB Connection
-client = MongoClient("mongodb://localhost:27017/")  # Replace with your MongoDB URI if different
-db = client["user_db"]  # Database name
-users_collection = db["users"]  # Collection name for storing user data
+client = MongoClient("mongodb://localhost:27017/") 
+db = client["user_db"]
+users_collection = db["users"]  
 
 from PySide6.QtWidgets import QSizePolicy
+import sys
+import os
+from PySide6.QtWidgets import (
+    QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout,
+    QFileDialog, QLabel, QListWidget, QListWidgetItem,
+    QMessageBox, QComboBox, QHBoxLayout
+)
+from PySide6.QtGui import QPixmap, QFont
+from PySide6.QtCore import Qt
+from datetime import datetime
 
 import bcrypt
 from PySide6.QtWidgets import (
@@ -37,6 +47,12 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QFont, QPixmap, QPalette, QColor, QLinearGradient
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout, QLineEdit, QComboBox
+from gtts import gTTS
+from playsound import playsound
+import requests
+import os
+
 
 class OnboardingScreen(QWidget):
     def __init__(self):
@@ -574,8 +590,9 @@ class MainWindow(QMainWindow):
 
         # LEFT MENUS
         widgets.btn_home.clicked.connect(self.buttonClick)
-        widgets.btn_show_map.clicked.connect(self.buttonClick)
+        widgets.btn_translate.clicked.connect(self.buttonClick)
         widgets.btn_explore.clicked.connect(self.buttonClick)
+        widgets.btn_diary.clicked.connect(self.buttonClick)
         widgets.btn_meteo.clicked.connect(self.buttonClick)
         widgets.btn_AI.clicked.connect(self.buttonClick)
 
@@ -834,12 +851,13 @@ class MainWindow(QMainWindow):
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
 
-        if btnName == "btn_show_map":
-            if not hasattr(self, 'show_map_page'):
-               self.show_map_page = ShowMapPage()
+
+        if btnName == "btn_translate":
+            if not hasattr(self, 'translate_page'):
+               self.translate_page = LanguageAssistant()
         
-            widgets.stackedWidget.addWidget(self.show_map_page)
-            widgets.stackedWidget.setCurrentWidget(self.show_map_page)
+            widgets.stackedWidget.addWidget(self.translate_page)
+            widgets.stackedWidget.setCurrentWidget(self.translate_page)
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
 
@@ -850,6 +868,13 @@ class MainWindow(QMainWindow):
            
          widgets.stackedWidget.addWidget(self.explore_page)  
          widgets.stackedWidget.setCurrentWidget(self.explore_page)  
+
+        if btnName == "btn_diary":
+         if not hasattr(self, 'diary_page'):
+            self.diary_page= TravelDiary()
+
+         widgets.stackedWidget.addWidget(self.diary_page)
+         widgets.stackedWidget.setCurrentWidget(self.diary_page)  
 
 
         if btnName == "btn_meteo":
@@ -1470,80 +1495,285 @@ import folium
 from folium import plugins
 from PySide6.QtWebEngineWidgets import QWebEngineView
 
-class ShowMapPage(QWidget):
+
+from PySide6.QtWidgets import QWidget, QLineEdit, QComboBox, QPushButton, QLabel, QVBoxLayout
+from PySide6.QtCore import Qt
+
+class LanguageAssistant(QWidget):
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("Local Language Assistant")
+        # Set a dark background color
+        self.setStyleSheet("background-color: #2E3440;")  # nice dark blue-gray
 
-        # Set up layout
-        self.layout = QVBoxLayout()
-        self.layout.setAlignment(Qt.AlignCenter)
-
-    
-        # Create map (using Folium)
-        self.create_map()
-
-        # Set up WebEngineView to display the map
-        self.map_view = QWebEngineView()  
-        with open("map_template.html", "r", encoding="utf-8") as f:
-            html = f.read()
-        self.map_view.setHtml(html)
-        self.layout.addWidget(self.map_view, stretch=1)
-        # Move Button
-        self.move_button = QPushButton("Map")
-        self.move_button.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #ff416c, stop:1 #ff4b2b);
-                border: none;
+        self.input_text = QLineEdit()
+        self.input_text.setPlaceholderText("Enter a phrase (e.g., Hello, how are you?)")
+        self.input_text.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #88C0D0;
+                border-radius: 10px;
+                padding: 8px;
+                font-size: 14px;
                 color: white;
-                padding: 10px 20px;
-                font-size: 16px;
-                font-weight: bold;
-                border-radius: 25px;
+                background-color: #3B4252;
             }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #ff4b2b, stop:1 #ff416c);
+            QLineEdit:focus {
+                border-color: #81A1C1;
             }
         """)
-        self.move_button.clicked.connect(self.move_to_new_location)
-        self.layout.addWidget(self.move_button)
 
-        self.setLayout(self.layout)
+        self.lang_box = QComboBox()
+        self.languages = {
+            "French": "fr",
+            "Spanish": "es",
+            "German": "de",
+            "Arabic": "ar",
+            "Chinese": "zh"
+        }
+        self.lang_box.addItems(self.languages.keys())
+        self.lang_box.setStyleSheet("""
+            QComboBox {
+                border: 2px solid #88C0D0;
+                border-radius: 10px;
+                padding: 5px 10px;
+                font-size: 14px;
+                color: white;
+                background-color: #3B4252;
+            }
+            QComboBox:hover {
+                border-color: #81A1C1;
+            }
+            QComboBox::drop-down {
+                border: none;
+            }
+        """)
 
-    def move_to_new_location(self):
-        # Move to New York (dynamic move)
-        lat, lon = 40.7128, -74.0060
-        self.map_view.page().runJavaScript(f"moveTo({lat}, {lon});")
+        self.translate_btn = QPushButton("Translate")
+        self.translate_btn.setCursor(Qt.PointingHandCursor)
+        self.translate_btn.clicked.connect(self.translate_phrase)
+        self.translate_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #81A1C1;
+                border-radius: 12px;
+                padding: 10px;
+                font-weight: bold;
+                color: #2E3440;
+                font-size: 14px;
+                transition: background-color 0.3s;
+            }
+            QPushButton:hover {
+                background-color: #5E81AC;
+            }
+        """)
 
-    def create_map(self):
-     """Create a beautiful map styled like Google Maps"""
-     self.map = folium.Map(
-        location=[48.8566, 2.3522],
-        zoom_start=13,
-        tiles='CartoDB positron'  # Google Maps light style
-     )
+        self.result_label = QLabel("Translation will appear here.")
+        self.result_label.setWordWrap(True)
+        self.result_label.setStyleSheet("color: white; font-size: 16px; margin-top: 15px;")
 
-     folium.Marker(
-        [48.8566, 2.3522],
-        popup="Paris",
-        icon=folium.Icon(color="pink", icon="info-sign")
-     ).add_to(self.map)
-     folium.TileLayer(
-       tiles='https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
-       attr='OpenStreetMap HOT',
-       name='Hot Style'
-     ).add_to(self.map)
+        self.speak_btn = QPushButton("Listen")
+        self.speak_btn.setCursor(Qt.PointingHandCursor)
+        self.speak_btn.clicked.connect(self.speak_translation)
+        self.speak_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #A3BE8C;
+                border-radius: 12px;
+                padding: 10px;
+                font-weight: bold;
+                color: #2E3440;
+                font-size: 14px;
+                margin-top: 10px;
+            }
+            QPushButton:hover {
+                background-color: #8FBCBB;
+            }
+        """)
 
-    # Optional: Add nice plugins
-     plugins.Fullscreen(position='topright').add_to(self.map)
-     plugins.MousePosition().add_to(self.map)
-     plugins.LocateControl().add_to(self.map)
+        layout = QVBoxLayout()
+        layout.addWidget(self.input_text)
+        layout.addWidget(self.lang_box)
+        layout.addWidget(self.translate_btn)
+        layout.addWidget(self.result_label)
+        layout.addWidget(self.speak_btn)
+
+        self.setLayout(layout)
+        self.current_translation = ""
+
+    # Your existing methods: translate_phrase and speak_translation
+
+    def translate_phrase(self):
+      phrase = self.input_text.text()
+      target_lang = self.languages[self.lang_box.currentText()]
+
+      url = "https://api.mymemory.translated.net/get"
+      params = {
+        "q": phrase,
+        "langpair": f"en|{target_lang}"
+      }
+
+      try:
+        response = requests.get(url, params=params, timeout=10)
+        print("Status Code:", response.status_code)
+        print("Response:", response.text)
+
+        if response.status_code == 200:
+            data = response.json()
+            self.current_translation = data['responseData']['translatedText']
+            self.result_label.setText(f"Translation: {self.current_translation}")
+        else:
+            self.result_label.setText("Error translating")
+      except Exception as e:
+        self.result_label.setText(f"Exception: {e}")
+        print("Exception:", e)
+
+    def speak_translation(self):
+        if self.current_translation:
+            tts = gTTS(text=self.current_translation, lang=self.languages[self.lang_box.currentText()])
+            tts.save("temp_audio.mp3")
+            playsound("temp_audio.mp3")
+            os.remove("temp_audio.mp3")
 
 
-    def update_map_location(self, lat, lon):
-        """Update the map to center on a new location"""
-        self.map = folium.Map(location=[lat, lon], zoom_start=12)
-        folium.Marker([lat, lon], popup="New Location").add_to(self.map)
-        self.map_view.setHtml(self.map._repr_html_())
+class TravelDiary(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("📸 Travel Diary")
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #1e1e2f;
+                font-family: "Segoe UI";
+                font-size: 14px;
+                color: #f5f5f5;
+            }
+            QPushButton {
+                background-color: 	#b300ff;
+                border-radius: 10px;
+                padding: 8px 14px;
+                color: white;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #6930c3;
+            }
+            QTextEdit {
+                background-color: #2c2c3c;
+                border: 1px solid #888;
+                border-radius: 8px;
+                color: #f5f5f5;
+            }
+            QComboBox {
+                background-color: #2c2c3c;
+                border-radius: 8px;
+                padding: 5px;
+                color: white;
+            }
+            QListWidget {
+                background-color: #2a2a40;
+                border-radius: 10px;
+            }
+        """)
+
+        self.entries = []
+        self.current_photo = None
+        self.init_ui()
+        self.load_entries_from_db()  # Load on startup
+
+    def init_ui(self):
+        title = QLabel("🗺️ Your City Photo Journal")
+        title.setFont(QFont("Arial", 18, QFont.Bold))
+        title.setAlignment(Qt.AlignCenter)
+
+        self.photo_btn = QPushButton("📷 Upload Photo")
+        self.photo_btn.clicked.connect(self.upload_photo)
+
+        self.note_input = QTextEdit()
+        self.note_input.setPlaceholderText("Write a cute memory or thought...")
+
+        self.rating_box = QComboBox()
+        self.rating_box.addItems(["★☆☆☆☆", "★★☆☆☆", "★★★☆☆", "★★★★☆", "★★★★★"])
+
+        self.save_btn = QPushButton("➕ Save Entry")
+        self.save_btn.clicked.connect(self.save_entry)
+
+        self.timeline = QListWidget()
+
+        layout = QVBoxLayout()
+        layout.addWidget(title)
+        layout.addWidget(self.photo_btn)
+        layout.addWidget(self.note_input)
+        layout.addWidget(self.rating_box)
+        layout.addWidget(self.save_btn)
+        layout.addWidget(QLabel("🕒 Timeline:"))
+        layout.addWidget(self.timeline)
+
+        self.setLayout(layout)
+
+    def upload_photo(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select Photo", "", "Images (*.png *.jpg *.jpeg)")
+        if file_path:
+            self.current_photo = file_path
+            QMessageBox.information(self, "Photo Selected", "Photo successfully selected! 💖")
+
+    def save_entry(self):
+        note = self.note_input.toPlainText().strip()
+        rating = self.rating_box.currentText()
+        photo = self.current_photo
+
+        if not photo:
+            QMessageBox.warning(self, "Missing Photo", "Please upload a photo first.")
+            return
+
+        if not note:
+            QMessageBox.warning(self, "Missing Note", "Please add a little note about your experience.")
+            return
+
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Save to MongoDB
+        entry = {
+            "photo_path": photo,
+            "note": note,
+            "rating": rating,
+            "timestamp": timestamp
+        }
+        users_collection.insert_one(entry)
+
+        self.update_timeline(photo, note, rating, timestamp)
+
+        self.note_input.clear()
+        self.current_photo = None
+        QMessageBox.information(self, "Saved", "Entry saved to your travel diary! 🌟")
+
+    def update_timeline(self, photo, note, rating, timestamp):
+        item = QListWidgetItem()
+        widget = QWidget()
+        layout = QHBoxLayout()
+
+        pic = QLabel()
+        pixmap = QPixmap(photo).scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        pic.setPixmap(pixmap)
+
+        info = QLabel(f"{timestamp}\n{rating}\n{note}")
+        info.setStyleSheet("color: #fafafa; font-size: 13px;")
+        info.setWordWrap(True)
+
+        layout.addWidget(pic)
+        layout.addWidget(info)
+        layout.setSpacing(10)
+
+        widget.setLayout(layout)
+        item.setSizeHint(widget.sizeHint())
+        self.timeline.addItem(item)
+        self.timeline.setItemWidget(item, widget)
+
+    def load_entries_from_db(self):
+        for entry in users_collection.find():
+            self.update_timeline(
+                entry.get("photo_path", ""),
+                entry.get("note", ""),
+                entry.get("rating", ""),
+                entry.get("timestamp", "")
+            )
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

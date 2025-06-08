@@ -655,17 +655,17 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_8.addWidget(self.btn_home)
 
-        self.btn_show_map = QPushButton(self.topMenu)
-        self.btn_show_map.setObjectName(u"btn_show_map")
-        sizePolicy.setHeightForWidth(self.btn_show_map.sizePolicy().hasHeightForWidth())
-        self.btn_show_map.setSizePolicy(sizePolicy)
-        self.btn_show_map.setMinimumSize(QSize(0, 45))
-        self.btn_show_map.setFont(font)
-        self.btn_show_map.setCursor(QCursor(Qt.PointingHandCursor))
-        self.btn_show_map.setLayoutDirection(Qt.LeftToRight)
-        self.btn_show_map.setStyleSheet(u"background-image: url(:/icons/images/icons/cil-cursor.png);")
+        self.btn_translate = QPushButton(self.topMenu)
+        self.btn_translate.setObjectName(u"btn_translate")
+        sizePolicy.setHeightForWidth(self.btn_translate.sizePolicy().hasHeightForWidth())
+        self.btn_translate.setSizePolicy(sizePolicy)
+        self.btn_translate.setMinimumSize(QSize(0, 45))
+        self.btn_translate.setFont(font)
+        self.btn_translate.setCursor(QCursor(Qt.PointingHandCursor))
+        self.btn_translate.setLayoutDirection(Qt.LeftToRight)
+        self.btn_translate.setStyleSheet(u"background-image: url(:/icons/images/icons/cil-speech.png);")
 
-        self.verticalLayout_8.addWidget(self.btn_show_map)
+        self.verticalLayout_8.addWidget(self.btn_translate)
 
         self.btn_explore = QPushButton(self.topMenu)
         self.btn_explore.setObjectName(u"btn_explore")
@@ -678,6 +678,19 @@ class Ui_MainWindow(object):
         self.btn_explore.setStyleSheet(u"background-image: url(:/icons/images/icons/cil-magnifying-glass.png);")
 
         self.verticalLayout_8.addWidget(self.btn_explore)
+
+        self.btn_diary = QPushButton(self.topMenu)
+        self.btn_diary.setObjectName(u"btn_diary")
+        sizePolicy.setHeightForWidth(self.btn_diary.sizePolicy().hasHeightForWidth())
+        self.btn_diary.setSizePolicy(sizePolicy)
+        self.btn_diary.setMinimumSize(QSize(0, 45))
+        self.btn_diary.setFont(font)
+        self.btn_diary.setCursor(QCursor(Qt.PointingHandCursor))
+        self.btn_diary.setLayoutDirection(Qt.LeftToRight)
+        self.btn_diary.setStyleSheet(u"background-image: url(:/icons/images/icons/cil-mood-very-good.png);")
+
+        self.verticalLayout_8.addWidget(self.btn_diary)
+
 
         self.btn_meteo = QPushButton(self.topMenu)
         self.btn_meteo.setObjectName(u"btn_meteo")
@@ -1629,7 +1642,7 @@ class Ui_MainWindow(object):
         self.titleLeftApp.setText(QCoreApplication.translate("MainWindow", u"CityExplorer", None))
         self.toggleButton.setText(QCoreApplication.translate("MainWindow", u"Hide", None))
         self.btn_home.setText(QCoreApplication.translate("MainWindow", u"Home", None))
-        self.btn_show_map.setText(QCoreApplication.translate("MainWindow", u"map", None))
+        self.btn_translate.setText(QCoreApplication.translate("MainWindow", u"map", None))
         self.btn_explore.setText(QCoreApplication.translate("MainWindow", u"Explore", None))
         self.btn_meteo.setText(QCoreApplication.translate("MainWindow", u"Meteo", None))
         self.btn_AI.setText(QCoreApplication.translate("MainWindow", u"AI assistant", None))
