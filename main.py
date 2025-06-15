@@ -1,57 +1,35 @@
 import sys
 import requests
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QStackedWidget, QHBoxLayout, QLineEdit, QApplication, QScrollArea, QFrame
-from PySide6.QtGui import QPixmap, QFont, QPalette, QBrush
+from PySide6.QtGui import QPixmap, QFont
 from PySide6.QtCore import Qt, QTimer
 from modules import *
 from widgets import *
 from io import BytesIO
-import datetime
-from amadeus import Client, ResponseError
 from PySide6.QtWidgets import (
     QListWidget, QMessageBox
 )
 widgets = None
 from pymongo import MongoClient
 
-# MongoDB Connection
 client = MongoClient("mongodb://localhost:27017/") 
 db = client["user_db"]
 users_collection = db["users"]  
-
-from PySide6.QtWidgets import QSizePolicy
-import sys
+import datetime
 import os
 from PySide6.QtWidgets import (
-    QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout,
-    QFileDialog, QLabel, QListWidget, QListWidgetItem,
-    QMessageBox, QComboBox, QHBoxLayout
+    QTextEdit,QFileDialog,QListWidgetItem,QComboBox 
 )
-from PySide6.QtGui import QPixmap, QFont
-from PySide6.QtCore import Qt
-from datetime import datetime
 
+from datetime import datetime
 import bcrypt
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QStackedWidget,
-    QPushButton, QHBoxLayout, QGraphicsOpacityEffect
-)
-from PySide6.QtGui import QPixmap, QFont, QPalette, QBrush
-from PySide6.QtCore import Qt, QTimer, QPropertyAnimation
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QLabel, QPushButton, QStackedWidget, QHBoxLayout, QSizePolicy)
-from PySide6.QtGui import QPixmap, QFont, QPalette, QBrush
-from PySide6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, QRect, QEvent
-from PySide6.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton,
-    QLabel, QStackedWidget, QSpacerItem, QSizePolicy
-)
-from PySide6.QtGui import QFont, QPixmap, QPalette, QColor, QLinearGradient
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout, QLineEdit, QComboBox
+from PySide6.QtWidgets import QGraphicsOpacityEffect
+from PySide6.QtCore import QPropertyAnimation
 from gtts import gTTS
 from playsound import playsound
-import requests
-import os
+from PySide6.QtWidgets import QSpinBox
+import datetime
+
 
 
 class OnboardingScreen(QWidget):
@@ -67,31 +45,24 @@ class OnboardingScreen(QWidget):
      self.layout.setContentsMargins(0, 0, 0, 0)
      self.layout.setAlignment(Qt.AlignCenter)
 
-    # Stacked widget to hold pages
      self.stacked_widget = QStackedWidget()
      self.layout.addWidget(self.stacked_widget)
 
-    # Create pages
      self.page1 = self.create_page("slide1.png", "🌍 Discover New Places", "Uncover hidden gems & must-see locations")
      self.page2 = self.create_page("slide.png", "🎭 Find Exciting Events", "Stay updated with concerts, festivals & activities")
      self.page3 = self.create_page("slide2.png", "🗺️ Plan Your Journey", "Your city, your adventure – plan your perfect trip")
 
-     self.pages = [self.page1, self.page2, self.page3]  # Save pages in a list
-
-    # Add pages to the stacked widget
+     self.pages = [self.page1, self.page2, self.page3]
      for page in self.pages:
         self.stacked_widget.addWidget(page)
 
      self.current_index = 0
      self.update_pagination()
 
-    # Fade Animation Setup
      self.opacity_effect = QGraphicsOpacityEffect()
      self.stacked_widget.setGraphicsEffect(self.opacity_effect)
      self.animation = QPropertyAnimation(self.opacity_effect, b"opacity")
      self.animation.setDuration(500)
-
-    # Timer for auto-switching pages
      self.timer = QTimer(self)
      self.timer.timeout.connect(self.next_page)
      self.timer.start(2000)
@@ -100,22 +71,19 @@ class OnboardingScreen(QWidget):
      page = QWidget()
      page.setObjectName("page")
 
-    # Background label
      background = QLabel(page)
      background.setPixmap(QPixmap(image_path))
      background.setScaledContents(True)
-
      background.setGeometry(0, 0, page.width(), page.height())  
      background.setGeometry(0, 0, self.width(), self.height())
-     background.lower()  # Send background behind
-
-    # Create a transparent container
+     background.lower()  
+    
      container = QWidget(page)
      container.setStyleSheet("background: transparent;")
      container_layout = QVBoxLayout(container)
      container_layout.setContentsMargins(30, 80, 30, 40)
      container_layout.setAlignment(Qt.AlignTop)
-# Title
+
      title = QLabel(title_text)
      title.setFont(QFont("Segoe UI", 12, QFont.Bold))
      title.setAlignment(Qt.AlignCenter)
@@ -131,7 +99,6 @@ class OnboardingScreen(QWidget):
      }
      """)
 
-# Description
      description = QLabel(description_text)
      description.setFont(QFont("Segoe UI", 10))
      description.setWordWrap(True)
@@ -147,7 +114,6 @@ class OnboardingScreen(QWidget):
      }
      """)
 
-    # Pagination Dots
      pagination_layout = QHBoxLayout()
      pagination_layout.setAlignment(Qt.AlignCenter)
      dots = []
@@ -159,7 +125,6 @@ class OnboardingScreen(QWidget):
         pagination_layout.addWidget(dot)
         dots.append(dot)
 
-    # Next Button
      next_button = QPushButton("Get Started")
      next_button.setStyleSheet(""" 
      QPushButton {
@@ -184,7 +149,7 @@ class OnboardingScreen(QWidget):
      }
      """)
      next_button.clicked.connect(self.next_page)
-     next_button.hide()  # Hide initially
+     next_button.hide()
 
 
      container_layout.addWidget(title)
@@ -194,7 +159,6 @@ class OnboardingScreen(QWidget):
      container_layout.addLayout(pagination_layout)
      container_layout.addWidget(next_button, alignment=Qt.AlignCenter)
 
-    # Save references
      page.background = background
      page.dots = dots
      page.next_button = next_button
@@ -257,13 +221,12 @@ class AuthScreen(QWidget):
         self.setWindowTitle("Authentification")
         self.resize(360, 640)
         self.setMinimumSize(320, 480)
-        # 📸 Background
+        
         self.background = QLabel(self)
         self.background.setPixmap(QPixmap("assets/bg.jpg"))
         self.background.setScaledContents(True)
         self.background.setGeometry(0, 0, self.width(), self.height())
 
-        # 🔮 Main layout with blur panel
         self.overlay = QWidget(self)
         self.overlay.setGeometry(0, 0, 360, 640)
 
@@ -271,12 +234,11 @@ class AuthScreen(QWidget):
         blur.setBlurRadius(20)
 
         opacity = QGraphicsOpacityEffect()
-        opacity.setOpacity(0.4)  # Feel free to tweak
+        opacity.setOpacity(0.4) 
 
         self.overlay.setGraphicsEffect(blur)
         self.overlay.setGraphicsEffect(opacity)
 
-        # 🧊 Foreground glassy form container
         self.container = QWidget(self)
         self.container.setGeometry(20, 60, 320, 520)
         self.container.setStyleSheet("""
@@ -284,12 +246,10 @@ class AuthScreen(QWidget):
             border-radius: 20px;
         """)
 
-        # Optional: Extra blur on container
         container_blur = QGraphicsBlurEffect()
         container_blur.setBlurRadius(10)
         self.container.setGraphicsEffect(container_blur)
 
-        # 🌟 Add stacked login/signup to container
         self.stack = QStackedWidget(self.container)
         self.stack.setGeometry(10, 10, 300, 500)
         self.stack.addWidget(self.login_ui())
@@ -515,9 +475,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         self.setWindowTitle("ExplorCity")
-        self.setFixedSize(360, 640)  # Mobile size
+        self.setFixedSize(360, 640)  
 
-        # Main widget and layout
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
         self.layout = QVBoxLayout(self.central_widget)
@@ -525,16 +484,14 @@ class MainWindow(QMainWindow):
     
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        # Add a QLabel for the weather icon
         self.ui.weather_icon = QLabel()
-        self.ui.weather_icon.setFixedSize(60, 50)  # Set icon size
-        self.ui.weather_label_layout = QHBoxLayout()  # Create horizontal layout
+        self.ui.weather_icon.setFixedSize(60, 50) 
+        self.ui.weather_label_layout = QHBoxLayout() 
         self.ui.weather_label_layout.addWidget(self.ui.weather_label)
         self.ui.weather_label_layout.addWidget(self.ui.weather_icon)
         self.ui.weather_label_layout.addWidget(self.ui.weather_display)
         self.ui.weather_label_layout.setAlignment(Qt.AlignLeft)
 
-        # Replace the single weather label with the new layout
         self.ui.weather_section = QWidget()
         self.ui.weather_section.setLayout(self.ui.weather_label_layout)
         self.ui.home_layout.addWidget(self.ui.weather_section)
@@ -542,18 +499,17 @@ class MainWindow(QMainWindow):
         self.ui.events_layout = QVBoxLayout()
 
         self.ui.events_scroll_area = QScrollArea(self)  
-        self.ui.events_scroll_area.setWidgetResizable(True)  # Make the scroll area resizable
-        self.ui.events_scroll_area.setStyleSheet("border-radius: 15px; border: 2px solid #FFB6C1;")  # Rounded corners for the scroll area
+        self.ui.events_scroll_area.setWidgetResizable(True)  
+        self.ui.events_scroll_area.setStyleSheet("border-radius: 15px; border: 2px solid #FFB6C1;")
 
         self.ui.events_container = QWidget(self)
-        self.ui.events_container.setLayout(self.ui.events_layout)  # Set the layout for the events container
+        self.ui.events_container.setLayout(self.ui.events_layout) 
 
         self.ui.events_scroll_area.setWidget(self.ui.events_container)
 
         self.ui.events_display.setLayout(QVBoxLayout())  # Clear previous layout
-        self.ui.events_display.layout().addWidget(self.ui.events_scroll_area)  # Add scroll area
+        self.ui.events_display.layout().addWidget(self.ui.events_scroll_area) 
 
-        # Attractions Layout Setup (New part)
         self.ui.attractions_layout = QVBoxLayout()
         self.ui.attractions_scroll_area = QScrollArea(self)
         self.ui.attractions_scroll_area.setWidgetResizable(True)
@@ -564,18 +520,13 @@ class MainWindow(QMainWindow):
         self.ui.attractions_display.setLayout(QVBoxLayout())
         self.ui.attractions_display.layout().addWidget(self.ui.attractions_scroll_area)
 
-
-        # Connect the Search button to the update function
         self.ui.search_button.clicked.connect(self.update_dashboard)
-
-        # Initialize the Explore Page
         self.explore_page = ItineraryPlanner()
         
         global widgets
         widgets = self.ui
         Settings.ENABLE_CUSTOM_TITLE_BAR = True
 
-        # APP NAME
         title = "ExplorCity"
         description = "ExploreCity App"
         self.setWindowTitle(title)
@@ -585,7 +536,6 @@ class MainWindow(QMainWindow):
 
         UIFunctions.uiDefinitions(self)
 
-        # QTableWidget PARAMETERS
         widgets.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
         # LEFT MENUS
@@ -595,6 +545,8 @@ class MainWindow(QMainWindow):
         widgets.btn_diary.clicked.connect(self.buttonClick)
         widgets.btn_meteo.clicked.connect(self.buttonClick)
         widgets.btn_AI.clicked.connect(self.buttonClick)
+        widgets.btn_exit.clicked.connect(self.buttonClick)
+
 
         def openCloseLeftBox():
             UIFunctions.toggleLeftBox(self, True)
@@ -606,19 +558,14 @@ class MainWindow(QMainWindow):
             UIFunctions.toggleRightBox(self, True)
         widgets.settingsTopBtn.clicked.connect(openCloseRightBox)
 
-        # SHOW APP
         self.show()
 
         # SET CUSTOM THEME
         useCustomTheme = False
         themeFile = "themes\py_dracula_light.qss"
 
-        # SET THEME AND HACKS
         if useCustomTheme:
-            # LOAD AND APPLY STYLE
             UIFunctions.theme(self, themeFile, True)
-
-            # SET HACKS
             AppFunctions.setThemeHack(self)
 
         widgets.stackedWidget.setCurrentWidget(widgets.home)
@@ -650,7 +597,6 @@ class MainWindow(QMainWindow):
             # Update weather text
             self.ui.weather_display.setText(f"{city}: {weather_desc}, {temp}°C")
 
-            # Fetch and display weather icon
             pixmap = QPixmap()
             pixmap.loadFromData(requests.get(icon_url).content)
             self.ui.weather_icon.setPixmap(pixmap)
@@ -688,7 +634,7 @@ class MainWindow(QMainWindow):
             if not events:
                 self.ui.events_display.setText("Aucun événement trouvé.")
             else:
-                self.ui.events_display.setText("")  # Clear previous message
+                self.ui.events_display.setText("") 
                 for event in events:  # Display first 5 events
                     event_name = event["name"]
                     event_date = event["dates"]["start"]["localDate"] if "dates" in event else "Date inconnue"
@@ -738,7 +684,7 @@ class MainWindow(QMainWindow):
         self.ui.events_display.setText("Erreur de récupération des événements.")
         print(f"Ticketmaster API Error: {e}")
     def get_attractions(self, city):
-      api_key = "fsq3bWhASwNmkqILh358fBbTglc16fotf5aZ/tuCV1Uav+k="  
+      api_key = "fsq36Z408vyrBLiDw2ioOD69UQN8xmTjVaSi/c2UkDe4A3s="  
       url = "https://api.foursquare.com/v3/places/search"
       headers = {
         "Accept": "application/json",
@@ -766,7 +712,7 @@ class MainWindow(QMainWindow):
             if not attractions:
                 self.ui.attractions_display.setText("No attractions found.")
             else:
-                self.ui.attractions_display.setText("")  # Clear previous message
+                self.ui.attractions_display.setText("") 
                 for attraction in attractions:
                     name = attraction.get("name", "Unknown name")
                     address = attraction.get("location", {}).get("formatted_address", "Address unavailable")
@@ -833,15 +779,14 @@ class MainWindow(QMainWindow):
             image_response = requests.get(photo_url)
             if image_response.status_code == 200:
                 pixmap = QPixmap()
-                pixmap.loadFromData(BytesIO(image_response.content).read())  # Load the image in memory
+                pixmap.loadFromData(BytesIO(image_response.content).read()) 
                 return pixmap
       except Exception as e:
         print(f"Error fetching image: {e}")
 
-      return None  # If no image found
+      return None  
 
     def buttonClick(self):
-        # GET BUTTON CLICKED
         btn = self.sender()
         btnName = btn.objectName()
 
@@ -895,20 +840,18 @@ class MainWindow(QMainWindow):
             widgets.stackedWidget.setCurrentWidget(widgets.widgets)
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
-
-        # PRINT BTN NAME
+        if btnName == "btn_exit":
+           QApplication.quit()
+        
         print(f'Button "{btnName}" pressed!')
 
 
     def resizeEvent(self, event):
-        # Update Size Grips
         UIFunctions.resize_grips(self)
 
     def mousePressEvent(self, event):
-        # SET DRAG POS WINDOW
         self.dragPos = event.globalPos()
 
-        # PRINT MOUSE EVENTS
         if event.buttons() == Qt.LeftButton:
             print('Mouse click: LEFT CLICK')
         if event.buttons() == Qt.RightButton:
@@ -920,7 +863,6 @@ class WeatherDashboard(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Initialize layout
         self.layout = QVBoxLayout()
 
         self.title_label = QLabel("Weather Dashboard")
@@ -959,7 +901,6 @@ class WeatherDashboard(QWidget):
         self.search_button.clicked.connect(self.search_weather)
         self.layout.addWidget(self.search_button)
 
-        # Display for the current weather
         self.weather_details = QLabel("Temperature: --°C\nDescription: --\nHumidity: --%")
         self.weather_details.setStyleSheet("""
             font-size: 20px; 
@@ -1019,13 +960,11 @@ class WeatherDashboard(QWidget):
         self.update_weather(weather_data)
 
     def update_weather(self, weather_data):
-        # Clear previous forecast data
         for i in range(self.forecast_container.count()):
             widget = self.forecast_container.itemAt(i).widget()
             if widget is not None:
                 widget.deleteLater()
 
-        # Current weather details
         current_weather = weather_data['list'][0]
         weather_description = current_weather['weather'][0]['description']
         icon_code = current_weather['weather'][0]['icon']
@@ -1036,25 +975,20 @@ class WeatherDashboard(QWidget):
         # URL for the weather icon
         icon_url = f"https://openweathermap.org/img/wn/{icon_code}.png"
 
-        # Load the weather icon using QPixmap
         icon_pixmap = self.load_icon(icon_url)
 
-        # Update current weather details
         self.weather_details.setText(f"Temperature: {temperature}°C\nDescription: {weather_description}\nHumidity: {humidity}%")
         self.date_label.setText(f"City: {city}\nDate: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-        # Loop through the forecast and display it
-        for day_data in weather_data['list'][::8]:  # Get data for every 24 hours (3-hour intervals in OpenWeatherMap)
+        for day_data in weather_data['list'][::8]:
             forecast_date = datetime.datetime.utcfromtimestamp(day_data['dt'])
             forecast_description = day_data['weather'][0]['description']
             forecast_icon_code = day_data['weather'][0]['icon']
             forecast_temperature = day_data['main']['temp']
             forecast_humidity = day_data['main']['humidity']
 
-            # Forecast row layout
             forecast_row = QHBoxLayout()
 
-            # Date label for the forecast day
             date_label = QLabel(forecast_date.strftime("%A, %d %b"))
             date_label.setStyleSheet("""
                 font-size: 18px; 
@@ -1062,8 +996,6 @@ class WeatherDashboard(QWidget):
                 font-weight: bold;
             """)
             forecast_row.addWidget(date_label)
-
-            # Weather icon for the forecast
             forecast_icon_url = f"https://openweathermap.org/img/wn/{forecast_icon_code}.png"
             icon_pixmap = self.load_icon(forecast_icon_url)
 
@@ -1104,10 +1036,6 @@ class WeatherDashboard(QWidget):
             print(f"Error loading icon: {e}")
             return QPixmap() 
 
-import requests
-from PySide6.QtWidgets import QMessageBox
-
-# Get access token
 def get_access_token(client_id, client_secret):
     url = "https://test.api.amadeus.com/v1/security/oauth2/token"
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
@@ -1119,7 +1047,6 @@ def get_access_token(client_id, client_secret):
     response = requests.post(url, headers=headers, data=data)
     return response.json().get("access_token")
 
-# Search hotels
 def search_hotels(city_code, access_token):
     url = "https://test.api.amadeus.com/v1/shopping/hotel-offers"
     headers = {"Authorization": f"Bearer {access_token}"}
@@ -1139,13 +1066,6 @@ def search_hotels(city_code, access_token):
     return response.json()
 
 
-from PySide6.QtWidgets import (
-    QWidget, QLabel, QComboBox, QSpinBox, QPushButton,
-    QVBoxLayout, QHBoxLayout, QScrollArea, QFrame
-)
-from PySide6.QtWidgets import QLineEdit
-
-
 class ItineraryPlanner(QWidget):
     def __init__(self):
         super().__init__()
@@ -1153,12 +1073,10 @@ class ItineraryPlanner(QWidget):
         self.setStyleSheet("background-color: white;")
         self.layout = QVBoxLayout(self)
 
-        # Title
         title = QLabel("🗓️ Plan Your Perfect Day")
         title.setStyleSheet("font-size: 20px; font-weight: bold;")
         self.layout.addWidget(title)
 
-        # Interests
         interest_layout = QHBoxLayout()
         interest_label = QLabel("Select Interest:")
         self.interest_box = QComboBox()
@@ -1167,7 +1085,6 @@ class ItineraryPlanner(QWidget):
         interest_layout.addWidget(self.interest_box)
         self.layout.addLayout(interest_layout)
 
-        # Time Available
         time_layout = QHBoxLayout()
         time_label = QLabel("Hours Available:")
         self.time_input = QSpinBox()
@@ -1176,7 +1093,6 @@ class ItineraryPlanner(QWidget):
         time_layout.addWidget(self.time_input)
         self.layout.addLayout(time_layout)
 
-        # Button
         self.generate_button = QPushButton("Generate Itinerary")
         self.generate_button.clicked.connect(self.generate_itinerary)
         self.layout.addWidget(self.generate_button)
@@ -1307,14 +1223,13 @@ class ItineraryPlanner(QWidget):
       self.show_real_itinerary(places)
     
     def show_real_itinerary(self, places):
-    # Vider les résultats précédents
       while self.results_widget.count():
         child = self.results_widget.takeAt(0)
         if child.widget():
             child.widget().deleteLater()
 
       if not places:
-        msg = QLabel("❌ No places found.")
+        msg = QLabel("No places found.")
         self.results_widget.addWidget(msg)
         return
 
@@ -1333,13 +1248,12 @@ class ItineraryPlanner(QWidget):
             if child.widget():
                 child.widget().deleteLater()
 
-        # Demo placeholder items
         for i in range(hours):
             item = QLabel(f"🔹 {interest} Place {i+1} - {9 + i}:00 AM")
             item.setStyleSheet("padding: 10px; background-color: #f0f0f0; border-radius: 10px;")
             self.results_widget.addWidget(item)
 
-import requests
+
 
 def get_coordinates_by_city(city_name):
     url = "https://opentripmap-places-v1.p.rapidapi.com/en/places/geoname"
@@ -1366,7 +1280,6 @@ class AIAssistant(QWidget):
         self.api_key = "AIzaSyA692v-PljbLWqj55kYBjel4TjjlPc1XW0"  
         self.api_endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
-        # Main Layout
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignCenter)
 
@@ -1443,12 +1356,11 @@ class AIAssistant(QWidget):
             }
         """)
 
-    # AI Response Function
     def get_ai_response(self):
         user_query = self.query_input.text().strip()
         if user_query:
             self.response_display.setText("Typing... ⌨️💖")
-            QTimer.singleShot(1000, lambda: self.fetch_ai_response(user_query))  # Typing effect delay
+            QTimer.singleShot(1000, lambda: self.fetch_ai_response(user_query))  
 
     def fetch_ai_response(self, query):
         response = self.query_with_gemini(query)
@@ -1491,20 +1403,14 @@ class AIAssistant(QWidget):
         except Exception as e:
             print("Request Error:", e)
             return None
-import folium
-from folium import plugins
-from PySide6.QtWebEngineWidgets import QWebEngineView
 
 
-from PySide6.QtWidgets import QWidget, QLineEdit, QComboBox, QPushButton, QLabel, QVBoxLayout
-from PySide6.QtCore import Qt
 
 class LanguageAssistant(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Local Language Assistant")
-        # Set a dark background color
-        self.setStyleSheet("background-color: #2E3440;")  # nice dark blue-gray
+        self.setStyleSheet("background-color: #2E3440;")
 
         self.input_text = QLineEdit()
         self.input_text.setPlaceholderText("Enter a phrase (e.g., Hello, how are you?)")
@@ -1598,8 +1504,6 @@ class LanguageAssistant(QWidget):
         self.setLayout(layout)
         self.current_translation = ""
 
-    # Your existing methods: translate_phrase and speak_translation
-
     def translate_phrase(self):
       phrase = self.input_text.text()
       target_lang = self.languages[self.lang_box.currentText()]
@@ -1675,7 +1579,7 @@ class TravelDiary(QWidget):
         self.entries = []
         self.current_photo = None
         self.init_ui()
-        self.load_entries_from_db()  # Load on startup
+        self.load_entries_from_db() 
 
     def init_ui(self):
         title = QLabel("🗺️ Your City Photo Journal")
@@ -1726,7 +1630,8 @@ class TravelDiary(QWidget):
             QMessageBox.warning(self, "Missing Note", "Please add a little note about your experience.")
             return
 
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 
         # Save to MongoDB
         entry = {
@@ -1778,7 +1683,6 @@ class TravelDiary(QWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    # Set dark theme for the whole application
     window = OnboardingScreen()
     window.show()
 

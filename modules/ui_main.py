@@ -1517,39 +1517,30 @@ class Ui_MainWindow(object):
 
 
         QMetaObject.connectSlotsByName(MainWindow)
-    # setupUi
+  
+        self.home_layout = QVBoxLayout(self.home)  
 
-# Create main layout for the home widget
-        self.home_layout = QVBoxLayout(self.home)  # Assuming widgets.home exists
-
-
-# Location Input
         self.location_label = QLabel("Enter your location:")
         self.location_input = QLineEdit()
         self.location_input.setPlaceholderText("Enter city name...")
         self.search_button = QPushButton("Search")
-
-# Weather Section
         self.weather_label = QLabel("Weather Update:")
         self.weather_display = QLabel("Loading...")
 
-# Featured Events Section
         self.events_label = QLabel("Upcoming Events:")
-        self.events_display = QTextBrowser()  # A simple text display
-        self.events_display = QTextBrowser()  # A simple text display
-        self.events_scroll_area = QScrollArea()  # Make events scrollable
-        self.events_scroll_area.setWidgetResizable(True)  # Allow resizing content inside the scroll area
-        self.events_scroll_area.setWidget(self.events_display)  # Set the widget to be scrollable
+        self.events_display = QTextBrowser() 
+        self.events_display = QTextBrowser()  
+        self.events_scroll_area = QScrollArea()
+        self.events_scroll_area.setWidgetResizable(True)
+        self.events_scroll_area.setWidget(self.events_display) 
 
-# Latest Attractions Section
         self.attractions_label = QLabel("Latest Attractions:")
         self.attractions_display = QTextBrowser()
-        self.attractions_scroll_area = QScrollArea()  # Make attractions scrollable
-        self.attractions_scroll_area.setWidgetResizable(True)  # Allow resizing content inside the scroll area
-        self.attractions_scroll_area.setWidget(self.attractions_display)  # Set the widget to be scrollable
+        self.attractions_scroll_area = QScrollArea()
+        self.attractions_scroll_area.setWidgetResizable(True)  
+        self.attractions_scroll_area.setWidget(self.attractions_display) 
 
 
-# Add widgets to layout
         self.home_layout.addWidget(self.location_label)
         self.home_layout.addWidget(self.location_input)
         self.home_layout.addWidget(self.search_button)
@@ -1560,7 +1551,6 @@ class Ui_MainWindow(object):
         self.home_layout.addWidget(self.attractions_label)
         self.home_layout.addWidget(self.attractions_scroll_area)  
 
-    # Apply styles directly here
         self.home_layout.setSpacing(15)
         self.home_layout.setContentsMargins(20, 20, 20, 20)
     
@@ -1581,7 +1571,6 @@ class Ui_MainWindow(object):
           padding: 10px;
         """)
 
-    # Styling for location input
         self.location_label.setStyleSheet("""
           font-size: 16px;
           color: #FF1493; 
@@ -1603,7 +1592,6 @@ class Ui_MainWindow(object):
           border-radius: 5px;
           cursor: pointer;
         """)
-            # Styling for events and attractions sections
         self.events_label.setStyleSheet("""
           font-size: 18px;
           color: #FF1493; 
@@ -1642,16 +1630,16 @@ class Ui_MainWindow(object):
         self.titleLeftApp.setText(QCoreApplication.translate("MainWindow", u"CityExplorer", None))
         self.toggleButton.setText(QCoreApplication.translate("MainWindow", u"Hide", None))
         self.btn_home.setText(QCoreApplication.translate("MainWindow", u"Home", None))
-        self.btn_translate.setText(QCoreApplication.translate("MainWindow", u"map", None))
+        self.btn_translate.setText(QCoreApplication.translate("MainWindow", u"translate", None))
         self.btn_explore.setText(QCoreApplication.translate("MainWindow", u"Explore", None))
+        self.btn_diary.setText(QCoreApplication.translate("MainWindow", u"Diary", None))
         self.btn_meteo.setText(QCoreApplication.translate("MainWindow", u"Meteo", None))
         self.btn_AI.setText(QCoreApplication.translate("MainWindow", u"AI assistant", None))
         self.btn_exit.setText(QCoreApplication.translate("MainWindow", u"exit", None))
         self.toggleLeftBox.setText(QCoreApplication.translate("MainWindow", u"Left Box", None))
         self.extraLabel.setText(QCoreApplication.translate("MainWindow", u"Left Box", None))
-#if QT_CONFIG(tooltip)
+
         self.extraCloseColumnBtn.setToolTip(QCoreApplication.translate("MainWindow", u"Close left box", None))
-#endif // QT_CONFIG(tooltip)
         self.extraCloseColumnBtn.setText("")
         self.btn_share.setText(QCoreApplication.translate("MainWindow", u"Share", None))
         self.textEdit.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
@@ -1661,21 +1649,15 @@ class Ui_MainWindow(object):
 "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600; color:#ff79c6;\">CityEXplorer</span></p>\n"
 "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#bd93f9;\">Created by: Hiba Elouazi</span></p>\n"))
         self.titleRightInfo.setText(QCoreApplication.translate("MainWindow", u"exploreCity APP", None))
-#if QT_CONFIG(tooltip)
+
         self.settingsTopBtn.setToolTip(QCoreApplication.translate("MainWindow", u"Settings", None))
-#endif // QT_CONFIG(tooltip)
         self.settingsTopBtn.setText("")
-#if QT_CONFIG(tooltip)
+
         self.minimizeAppBtn.setToolTip(QCoreApplication.translate("MainWindow", u"Minimize", None))
-#endif // QT_CONFIG(tooltip)
         self.minimizeAppBtn.setText("")
-#if QT_CONFIG(tooltip)
         self.maximizeRestoreAppBtn.setToolTip(QCoreApplication.translate("MainWindow", u"Maximize", None))
-#endif // QT_CONFIG(tooltip)
         self.maximizeRestoreAppBtn.setText("")
-#if QT_CONFIG(tooltip)
         self.closeAppBtn.setToolTip(QCoreApplication.translate("MainWindow", u"Close", None))
-#endif // QT_CONFIG(tooltip)
         self.closeAppBtn.setText("")
         self.labelBoxBlenderInstalation.setText(QCoreApplication.translate("MainWindow", u"FILE BOX", None))
         self.lineEdit.setText("")
@@ -1746,5 +1728,3 @@ class Ui_MainWindow(object):
         self.btn_message.setText(QCoreApplication.translate("MainWindow", u"Message", None))
         self.btn_logout.setText(QCoreApplication.translate("MainWindow", u"Logout", None))
         self.creditsLabel.setText(QCoreApplication.translate("MainWindow", u"By: Hiba Elouazi", None))
-    # retranslateUi
-
