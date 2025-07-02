@@ -583,7 +583,7 @@ class MainWindow(QMainWindow):
 
     def get_weather(self, city):
       """Fetch weather data from WeatherStack API and update the UI with an icon."""
-      api_key = "a8a167c4ee2f0d7f7796cc7bbf6274ad"  
+      api_key = "API_KEY" 
       url = f"http://api.weatherstack.com/current?access_key={api_key}&query={city}"
 
       try:
@@ -612,7 +612,7 @@ class MainWindow(QMainWindow):
 
 
     def get_events(self, city):
-      api_key = "1mkxTalQ0Ub70YsyAfH3GoEGXhwzuUxk"  
+      api_key = "API_KEY"  
       url = f"https://app.ticketmaster.com/discovery/v2/events.json?apikey={api_key}&city={city}"
 
       try:
@@ -684,7 +684,7 @@ class MainWindow(QMainWindow):
         self.ui.events_display.setText("Erreur de récupération des événements.")
         print(f"Ticketmaster API Error: {e}")
     def get_attractions(self, city):
-      api_key = "fsq36Z408vyrBLiDw2ioOD69UQN8xmTjVaSi/c2UkDe4A3s="  
+      api_key = "API_KEY"  
       url = "https://api.foursquare.com/v3/places/search"
       headers = {
         "Accept": "application/json",
@@ -948,7 +948,7 @@ class WeatherDashboard(QWidget):
 
     def search_weather(self):
         city = self.city_input.text()
-        api_key = "bac9ee899b14fc8ae5397cc635e70ceb" 
+        api_key = "API_KEY"
         url = f"http://api.openweathermap.org/data/2.5/forecast?q={city}&appid={api_key}&units=metric"
         response = requests.get(url)
         weather_data = response.json()
@@ -1277,7 +1277,7 @@ class AIAssistant(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.api_key = "AIzaSyA692v-PljbLWqj55kYBjel4TjjlPc1XW0"  
+        self.api_key = "API_KEY"
         self.api_endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
         self.layout = QVBoxLayout()
